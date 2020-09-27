@@ -1,0 +1,79 @@
+ip route default gateway pp 1 filter 600000 gateway tunnel 1
+ipv6 prefix 1 ra-prefix@lan2::/64
+ip lan1 address 192.168.100.1/24
+ipv6 lan1 address ra-prefix@lan2::1/64
+ipv6 lan1 rtadv send 1 o_flag=on
+ipv6 lan1 dhcp service server
+ipv6 lan2 dhcp service client ir=on
+pp select 1
+ pp keepalive interval 30 retry-interval=30 count=12
+ pp always-on on
+ pppoe use lan2
+ pppoe auto disconnect off
+ pp auth accept pap chap
+ pp auth myname [プロバイダ提供アカウント名] [プロバイダ提供パスワード]
+ ppp lcp mru on 1454
+ ppp ipcp ipaddress on
+ ppp ipcp msext on
+ ppp ccp type none
+ ip pp secure filter in 200003 200020 200021 200022 200023 200024 200025 200030 200032 210001
+ ip pp secure filter out 200013 200020 200021 200022 200023 200024 200025 200026 200027 200099 dynamic 200080 200081 200082 200083 200084 200085 200098 200099
+ ip pp nat descriptor 1000
+ pp enable 1
+tunnel select 1
+ tunnel encapsulation ipip
+ tunnel endpoint address XXXX:XXXX::XXXX:XXX
+ tunnel enable 1
+ip filter 200000 reject 10.0.0.0/8 * * * *
+ip filter 200001 reject 172.16.0.0/12 * * * *
+ip filter 200002 reject 192.168.0.0/16 * * * *
+ip filter 200003 reject 192.168.100.0/24 * * * *
+ip filter 200010 reject * 10.0.0.0/8 * * *
+ip filter 200011 reject * 172.16.0.0/12 * * *
+ip filter 200012 reject * 192.168.0.0/16 * * *
+ip filter 200013 reject * 192.168.100.0/24 * * *
+ip filter 200020 reject * * udp,tcp 135 *
+ip filter 200021 reject * * udp,tcp * 135
+ip filter 200022 reject * * udp,tcp netbios_ns-netbios_ssn *
+ip filter 200023 reject * * udp,tcp * netbios_ns-netbios_ssn
+ip filter 200024 reject * * udp,tcp 445 *
+ip filter 200025 reject * * udp,tcp * 445
+ip filter 200026 restrict * * tcpfin * www,21,nntp
+ip filter 200027 restrict * * tcprst * www,21,nntp
+ip filter 200030 pass * 192.168.100.0/24 icmp * *
+ip filter 200031 pass * 192.168.100.0/24 established * *
+ip filter 200032 pass * 192.168.100.0/24 tcp * ident
+ip filter 200033 pass * 192.168.100.0/24 tcp ftpdata *
+ip filter 200034 pass * 192.168.100.0/24 tcp,udp * domain
+ip filter 200035 pass * 192.168.100.0/24 udp domain *
+ip filter 200036 pass * 192.168.100.0/24 udp * ntp
+ip filter 200037 pass * 192.168.100.0/24 udp ntp *
+ip filter 200099 pass * * * * *
+ip filter 210001 pass * 192.168.100.111 tcp * www,https
+ip filter 500000 restrict * * * * *
+ip filter 600000 pass 192.168.100.111 * * * *
+ip filter dynamic 200080 * * ftp
+ip filter dynamic 200081 * * domain
+ip filter dynamic 200082 * * www
+ip filter dynamic 200083 * * smtp
+ip filter dynamic 200084 * * pop3
+ip filter dynamic 200085 * * submission
+ip filter dynamic 200098 * * tcp
+ip filter dynamic 200099 * * udp
+nat descriptor type 1000 masquerade
+nat descriptor masquerade static 1000 1 192.168.100.111 tcp www,https
+telnetd host lan
+dhcp service server
+dhcp server rfc2131 compliant except remain-silent
+dhcp scope 1 192.168.100.2-192.168.100.191/24
+dhcp scope bind 1 192.168.100.111 ethernet XX:XX:XX:XX:XX:XX
+dns host lan1
+dns server pp 1
+dns server dhcp lan2
+dns server select 500001 pp 1 any . restrict pp 1
+dns private address spoof on
+ip host www.primenon.com 192.168.100.111
+dns private name setup.netvolante.jp
+analog supplementary-service pseudo call-waiting
+analog extension dial prefix sip prefix="9#"
+statistics traffic on
