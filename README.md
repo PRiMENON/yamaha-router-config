@@ -1,4 +1,4 @@
-# YAMAHA NVR510
+# yamaha-router-config
 
 YAMAHA NVR510 で、IPoE(DS-Lite)と PPPoE を併用して、ウェブサーバを外部に公開します。
 
